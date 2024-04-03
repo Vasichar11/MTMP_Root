@@ -1,0 +1,11 @@
+TODO:
+- sort tree in multithreading implementation to compare it with the sequential output
+- use TBufferMerger to write in parallel to the same file
+- exploit TTreeProcessorMP
+- profiling
+
+Exploited:
+- IMT 
+- TTreeProcessorMT
+- TProcessExecutor
+- standard threads w/ locks
