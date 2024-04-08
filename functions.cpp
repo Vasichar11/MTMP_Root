@@ -26,7 +26,7 @@ TTree* fillTree(const UInt_t start, const UInt_t end) {
     TTree *tree = new TTree("tree", "Example Tree");
     UInt_t event;
     Float_t variable;
-    tree->Branch("event", &event, "event/I");
+    tree->Branch("event", &event, "event/i");
     tree->Branch("variable", &variable, "variable/F");
     for (UInt_t i = start; i < end; ++i) {
         event = i;
@@ -48,11 +48,13 @@ void fillTreeThread(const UInt_t start, const UInt_t end, TTree* tree) {
         tree->Fill();
     }
 }
+
 void equalTrees(TTree* tree1, TTree* tree2) {
     std::cout << "Comparing trees: "<< tree1->GetName() << " " << tree2->GetName() << std::endl;
     const char* treeName = "tree";
     
-    // Write in temporary files and compore
+    // Write in temporary files and compare
+    // Trees need to have the same name for root-diff to work
     auto file1 = std::unique_ptr<TFile> {TFile::Open("file1.root", "RECREATE")};
     TTree *t1 = tree1->CloneTree();
     t1->SetName(treeName);

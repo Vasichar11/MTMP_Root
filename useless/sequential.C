@@ -1,9 +1,6 @@
 #include <iostream>
-#include <thread>
-#include <vector>
-#include <chrono>
 #include "TFile.h"
-#include "TH2F.h"
+#include "TH1F.h"
 #include "TRandom3.h"
 #include "TTree.h"
 #include "TROOT.h"
@@ -11,8 +8,9 @@
 #include "TTreeReader.h"
 #include "include/functions.h"
 
-#define numEvents 10e5
+#define numEventsD 1e2
 #define numFiles 8
+const UInt_t numEvents = static_cast<UInt_t>(numEventsD); 
 
 void sequential1() {
     std::cout<<"\nExercise 1..."<<std::endl;
@@ -44,7 +42,7 @@ void sequential1() {
     TH1F* eventHist = new TH1F("event_dist", "Event Distribution;Event;Count", 100, 0, numEvents);
     TH1F* variableHist = new TH1F("variable_dist", "Variable Distribution;Variable;Count", 100, 0, numEvents*10);
     TTreeReader reader(tree);
-    TTreeReaderValue<int> eventRV(reader, "event");  // <UInt_t> won't work?
+    TTreeReaderValue<UInt_t> eventRV(reader, "event");  // <UInt_t> won't work?
     TTreeReaderValue<Float_t> variableRV(reader, "variable");
     while (reader.Next()) {
         UInt_t event = *eventRV;
@@ -63,12 +61,8 @@ void sequential1() {
 }
 
 void sequential2() {
-
     std::cout<<"\nExercise 2..."<<std::endl;
-
     TStopwatch stopwatch;
-    UInt_t event;
-    Float_t variable;
 
     // 1) Fill histograms sequentially
     auto workItem = [](const char* fileNamePrefix, const char* histName) {

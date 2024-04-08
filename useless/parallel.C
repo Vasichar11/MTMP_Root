@@ -9,8 +9,8 @@
 #include "TRandom3.h"
 #include "TStopwatch.h"
 #include "TTreeReader.h"
-//#include <mutex>
 #include "TMutex.h"
+//#include <mutex>
 //#include "ROOT/TBufferMerger.hxx"
 #include "ROOT/TSeq.hxx"
 #include "ROOT/TProcessExecutor.hxx"
@@ -19,13 +19,14 @@
 #include "Math/Vector4Dfwd.h"
 #include "include/functions.h"
 
-#define numEvents 10e4
+#define numEventsD 1e2
 #define numThreads 8
-
+const UInt_t numEvents = static_cast<UInt_t>(numEventsD); 
 TMutex Mutex; 
-void fillTreeLocks(TTree* tree, const UInt_t start, const UInt_t end, UInt_t &local_event, Float_t &local_variable) {
+
+void fillTreeLocks(const UInt_t start, const UInt_t end, TTree* tree,  UInt_t &local_event, Float_t &local_variable) {
     std::thread::id this_id = std::this_thread::get_id();
-    
+
     for (UInt_t i = start; i < end; ++i) {
         local_event = i;
         local_variable = i*10;
@@ -42,9 +43,7 @@ void parallel1() {
     TStopwatch stopwatch;
     std::cout<<"Exercise 1..."<<std::endl;
     TFile *file = new TFile("parallel1.root", "RECREATE", "parallel1", 0 ); // 0 is for the compression algorithm to ensure the same compression each time
-    UInt_t event;
-    Float_t variable;
-
+    ROOT::EnableThreadSafety();
     // 1) Fill tree in parallel
 
     // ---------------1a) Fill in the same tree using Implicit MultiThreading, as TTree::Fill() is supported for IMT
@@ -56,25 +55,27 @@ void parallel1() {
     ROOT::DisableImplicitMT();
 
     // --------------1b) Fill in the same tree using locks, the conventional way
+    // Won't work. Filling duplicates entries like in omp1.C
     // ROOT::EnableThreadSafety(); // TTree is Conditionally thread safe, so we will need to use locks anyways to write in the same tree
     // Data will be unsorted, as threads are performing unordered filling 
     TTree *treeL = new TTree("treeL", "Example Tree");
-    treeL->Branch("event", &event, "event/I");
-    treeL->Branch("variable", &variable, "variable/F");
     std::vector<std::thread> threads;
+    UInt_t event;
+    Float_t variable;
+    treeL->Branch("event", &event, "event/i");
+    treeL->Branch("variable", &variable, "variable/F");
     stopwatch.Start();
     for (UInt_t i = 0; i < numThreads; ++i) {
-        UInt_t start = (i * numEvents) / numThreads;
-        UInt_t end = ((i + 1) * numEvents) / numThreads;
+        UInt_t start = i * (numEvents / numThreads); //0 ,50
+        UInt_t end = (i + 1) * (numEvents / numThreads); //50, 100
         if (i == numThreads - 1) { 
             end = numEvents; // Last thread handles remainder events
         }
-        threads.emplace_back(fillTreeLocks, treeL, start, end, std::ref(event), std::ref(variable));
+        threads.emplace_back(fillTreeLocks, start, end, treeL, std::ref(event), std::ref(variable));
     }
     for (auto& thread : threads) {
         thread.join();
     }
-    //treeL->BuildIndex("event"); // Sort to compare with other tree. Doesn't work?
     stopwatch.Stop();
     std::cout << "1b) Fill tree data (locks): " << stopwatch.RealTime() * 1000 << " milliseconds" << std::endl;
 
@@ -98,34 +99,13 @@ void parallel1() {
     stopwatch.Stop();
     std::cout << "1c) Fill tree data (merging): " << stopwatch.RealTime() * 1000 << " milliseconds" << std::endl;
 
-    // -------------1d) Fill trees using work pool with TProcessExecutor  
-    stopwatch.Start();
-    auto workItem = [](UInt_t workerID) {
-        TTree *treeP = new TTree("treeP", "Example Tree");
-        UInt_t local_event;
-        Float_t local_variable;
-        treeP->Branch("event", &local_event, "event/I");
-        treeP->Branch("variable", &local_variable, "variable/F");
-        for (UInt_t i = 0; i < numEvents; ++i) {
-            local_event = i;
-            local_variable = i*10;
-            simulateLoad();
-            treeP->Fill();
-        }
-        treeP->Write();
-        return 0;
-    };
-    ROOT::TProcessExecutor pool(numThreads); 
-    pool.Map(workItem, ROOT::TSeqI(numThreads)); 
-    stopwatch.Stop();
-    std::cout << "1d) Fill tree data (TProcessExecutor): " << stopwatch.RealTime() * 1000 << " milliseconds" << std::endl;
 
     // 2) Get tree data in parallel (implicit)
     ROOT::EnableImplicitMT(numThreads);
-    const auto nEntries = tree->GetEntries();
+    const auto nEntries = treeL->GetEntries();
     stopwatch.Start();
     for (auto i : ROOT::TSeqUL(nEntries)) {
-        tree->GetEntry(i);
+        treeL->GetEntry(i);
     }
     stopwatch.Stop();
     std::cout << "2) Read tree data (IMT): " << stopwatch.RealTime() * 1000 << " milliseconds" << std::endl;
@@ -138,9 +118,7 @@ void parallel1() {
     std::cout << "3) Write data: " << stopwatch.RealTime() * 1000 << " milliseconds" << std::endl;
 
     // Compare trees to see if they are equal
-    //equalTrees(tree, treeM);
-    // auto treeP = file->Get<TTree>("treeP"); 
-    // equalTrees(tree, treeP); 
+    equalTrees(tree, treeM);
     // equalTrees(tree, treeL); //treeL unsorted
 
     // 4) Read tree and fill histograms in parallel (implicit)
@@ -149,7 +127,7 @@ void parallel1() {
     ROOT::TThreadedObject<TH1F> variableHist("variable_dist", "Variable Distribution;Variable;Count", 100, 0, numEvents*10);
     ROOT::TTreeProcessorMT tp("parallel1.root", "tree");
     auto ReadFill = [&](TTreeReader &myReader) {
-        TTreeReaderValue<int> eventRV(myReader, "event"); // <UInt_t> won't work?
+        TTreeReaderValue<UInt_t> eventRV(myReader, "event"); // <UInt_t> won't work?
         TTreeReaderValue<Float_t> variableRV(myReader, "variable");
         auto myEventHist = eventHist.Get();
         auto myVariableHist = variableHist.Get();
@@ -166,6 +144,7 @@ void parallel1() {
     stopwatch.Stop();
     std::cout << "4) Read tree & Fill histos (IMT): " << stopwatch.RealTime() * 1000 << " milliseconds" << std::endl;
     // Write  histos  
+    file->cd();
     eventHistMerged->Write();
     variableHistMerged->Write();
 
@@ -207,7 +186,7 @@ void parallel2() {
     pool1.Map(workItem1, ROOT::TSeq(numThreads));
     stopwatch.Stop();
     std::cout << "Fill histo data (mp): " << stopwatch.RealTime() * 1000 << " milliseconds" << std::endl;
-    // ------------------- 2a) Fill concurently, conventional way
+    // ------------------- 1b) Fill concurently, conventional way
     ROOT::EnableThreadSafety();
     stopwatch.Start();
     std::vector<std::thread> pool2;
@@ -268,7 +247,7 @@ void parallel1(const int numEvents, const int numThreads) {
     // Create branches in the tree
     int event;
     Float_t variable;
-    tree->Branch("event", &event, "event/I");
+    tree->Branch("event", &event, "event/i");
     tree->Branch("variable", &variable, "variable/F");
 
     // Create threads for filling the tree

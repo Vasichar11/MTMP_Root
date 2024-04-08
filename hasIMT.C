@@ -1,3 +1,5 @@
+/// Ensure if IMT is enabled
+
 void enable_imt() {
 std::cout << R__HAS_IMT << std::endl;
 
@@ -11,7 +13,4 @@ std::cout << R__HAS_IMT << std::endl;
 #endif
 std::cout << R__HAS_IMT << std::endl;
 
-    // Your code here
-    // This code will now potentially benefit from multi-threading
-    // if it involves objects or methods that support IMT.
 }

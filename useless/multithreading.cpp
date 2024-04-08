@@ -48,7 +48,7 @@ void mt1(const int numEvents) {
     TTree *tree = new TTree("tree", "Example Tree");
     int event;
     float energy;
-    tree->Branch("event", &event, "event/I");
+    tree->Branch("event", &event, "event/i");
     tree->Branch("energy", &energy, "energy/F");
     stopwatch.Start();
     std::thread fillThread1(fillDataLocally, tree,  0, int(numEvents/2));
@@ -138,7 +138,7 @@ void mt1(const int numEvents, const int numThreads) {
     // Create branches in the tree
     int event;
     float energy;
-    tree->Branch("event", &event, "event/I");
+    tree->Branch("event", &event, "event/i");
     tree->Branch("energy", &energy, "energy/F");
 
     // Create threads for filling the tree
