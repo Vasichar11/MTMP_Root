@@ -44,7 +44,7 @@ void mt1(const int numEvents) {
 
     // Fill data in parallel
     ROOT::EnableThreadSafety();
-    TFile *file = new TFile("mt1.root", "RECREATE");
+    TFile *file = new TFile("mt1.root", "RECREATE", "mt1", 0);
     TTree *tree = new TTree("tree", "Example Tree");
     int event;
     float energy;

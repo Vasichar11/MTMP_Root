@@ -1,5 +1,7 @@
-/// Read from tree and fill histograms using IMT
-///  
+/// Fill histograms while reading from tree in parallel using IMT
+/// With the help of ROOT::TThreadedObject and ROOT::TTreeProcessorMT
+/// numThreads is automatically decided by ROOT. Any other value is used just as a hint.
+/// Works
 
 #include <iostream>
 #include "TFile.h"
@@ -12,13 +14,13 @@
 #include "ROOT/TTreeProcessorMT.hxx"
 #include "include/functions.h"
 
-#define numEventsD 1e2
+#define numEventsD 1e6
 #define numThreads 8
 const UInt_t numEvents = static_cast<UInt_t>(numEventsD); 
 
 void read_fillHist_imt() {
     // Write the data that will be read later
-    TFile *file1 = new TFile("fillTree_seq.root", "RECREATE", "fillTree_seq", 0 ); // 0 is for the compression algorithm to ensure the same compression each time
+    TFile *file1 = new TFile("read_fillHist_imt.root", "RECREATE", "read_fillHist_imt", 0 ); 
     auto tree = fillTree(0, numEvents);
     // Write, close, delete
     file1->Write();
@@ -26,14 +28,14 @@ void read_fillHist_imt() {
     delete file1;
 
     // Read and Fill histograms in parallel
-    ROOT::EnableImplicitMT(numThreads);
+    //ROOT::EnableImplicitMT(numThreads);
     TStopwatch stopwatch;
     stopwatch.Start();
     ROOT::TThreadedObject<TH1F> eventHist("event_dist", "Event Distribution;Event;Count", 100, 0, numEvents);
     ROOT::TThreadedObject<TH1F> variableHist("variable_dist", "Variable Distribution;Variable;Count", 100, 0, numEvents*10);
-    ROOT::TTreeProcessorMT tp("fillTree_seq.root", "tree");
+    ROOT::TTreeProcessorMT tp("read_fillHist_imt.root", "tree");
     auto ReadFill = [&](TTreeReader &myReader) {
-        TTreeReaderValue<UInt_t> eventRV(myReader, "event"); // <UInt_t> won't work?
+        TTreeReaderValue<UInt_t> eventRV(myReader, "event"); 
         TTreeReaderValue<Float_t> variableRV(myReader, "variable");
         auto myEventHist = eventHist.Get();
         auto myVariableHist = variableHist.Get();
@@ -51,7 +53,7 @@ void read_fillHist_imt() {
     std::cout << "Read tree & Fill histos (imt): " << stopwatch.RealTime() * 1000 << " milliseconds" << std::endl;
     
     // Write  histos  
-    TFile *file2 = new TFile("read_fillHist_imt.root", "RECREATE", "read_fillHist_imt", 0 ); // 0 is for the compression algorithm to ensure the same compression each time
+    TFile *file2 = new TFile("read_fillHist_imt.root", "RECREATE", "read_fillHist_imt", 0 ); 
     file2->cd();
     eventHistMerged->Write();
     variableHistMerged->Write();

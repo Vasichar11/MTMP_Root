@@ -1,3 +1,4 @@
+
 #include <iostream>
 #include <vector>
 #include <ROOT/RDataFrame.hxx>
@@ -14,7 +15,8 @@ struct EventData {
 
 int main() {
     // Enable ROOT's implicit multithreading with specified number of threads
-    ROOT::EnableImplicitMT(8); // Specify the number of threads here
+    ROOT::EnableImplicitMT(4); // Specify the number of threads here - its just a suggestion for ROOT
+    constexpr int kNumEvents = 10e7;
 
     // Create a ROOT file to store the TTree
     TFile file("output.root", "RECREATE");
@@ -29,7 +31,6 @@ int main() {
     tree.Branch("z", &eventData.z, "z/F");
 
     // Generate some data
-    constexpr int kNumEvents = 10e7;
     std::vector<float> xData(kNumEvents);
     std::vector<float> yData(kNumEvents);
     std::vector<float> zData(kNumEvents);

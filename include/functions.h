@@ -21,8 +21,6 @@ void simulateLoad();
 
 TTree* fillTree(const UInt_t start, const UInt_t end);
 
-void fillTreeThread(const UInt_t start, const UInt_t end, TTree* tree);
-
 // Function to compare two root trees
 void equalTrees(TTree* tree1, TTree* tree2);
 

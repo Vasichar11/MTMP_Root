@@ -1,5 +1,6 @@
 /// Fill in the same tree using OpenMP work sharing with a critical region
 /// Incorrect results - Race condition - Fills duplicate entries like in fillTree_locks.C
+/// Issue: Concurrent access in conditional thread safe object (TTree) which is not allowed even if we use locks
 
 #include <iostream>
 #include <omp.h>
@@ -17,16 +18,20 @@ void fillTree_ompCritical() {
 
     omp_set_num_threads(numThreads);
 
-    ROOT::EnableThreadSafety();
+    // ROOT::EnableThreadSafety(); // We will consider TTree as unsafe object and use locks
     TStopwatch stopwatch;
-    TFile *file = new TFile("fillTree_ompCritical.root", "RECREATE");
+    TFile *file = new TFile("fillTree_ompCritical.root", "RECREATE", "fillTree_ompCritical", 0);
     TTree *tree = new TTree("tree", "Example Tree");
     UInt_t event;
     Float_t variable;
     Double_t elapsedFill, elapsedWrite;
     tree->Branch("event", &event, "event/i");
     tree->Branch("variable", &variable, "variable/F");
-
+    
+    //omp_lock_t lock;
+    //omp_init_lock(&lock);
+    //std::vector <UInt_t> events(numEvents);
+    //std::vector <Float_t> variables(numEvents);
     stopwatch.Start();
     #pragma omp parallel for
     for (UInt_t i = 0; i < numEvents; ++i) {
@@ -34,9 +39,18 @@ void fillTree_ompCritical() {
         event = i;
         variable = i * 10;
         simulateLoad();
+        //omp_set_lock(&lock); // Tried using omp locks instead, didn't work
         #pragma omp critical  // Only one process can fill per time 
-        tree->Fill();
+        {
+            //events[i]=event; // No race condition if we fill vectors
+            //variables[i]=variable; 
+            tree->Fill(); // Race condition if we fill the same tree using locks or critical region
+            //omp_unset_lock(&lock);
+        }
+
     }
+
+    //omp_destroy_lock(&lock);
     stopwatch.Stop();
     elapsedFill = stopwatch.RealTime() * 1000; // Convert to milliseconds
     std::cout << "Fill data (omp critical): " << elapsedFill << " milliseconds" << std::endl;

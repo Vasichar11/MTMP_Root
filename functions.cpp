@@ -36,18 +36,6 @@ TTree* fillTree(const UInt_t start, const UInt_t end) {
     }
     return tree;
 }
-void fillTreeThread(const UInt_t start, const UInt_t end, TTree* tree) {
-    UInt_t event;
-    Float_t variable;
-    tree->Branch("event", &event, "event/i");
-    tree->Branch("variable", &variable, "variable/F");
-    for (UInt_t i = start; i < end; ++i) {
-        event = i;
-        variable = i*10;
-        simulateLoad();
-        tree->Fill();
-    }
-}
 
 void equalTrees(TTree* tree1, TTree* tree2) {
     std::cout << "Comparing trees: "<< tree1->GetName() << " " << tree2->GetName() << std::endl;

@@ -1,15 +1,15 @@
 /// Fill in individual trees using OpenMP parallel region and then merge
-/// Correct results
+/// Works
 
+#include <iostream>
+#include <omp.h>
 #include "TFile.h"
 #include "TTree.h"
 #include "TROOT.h"
-#include <iostream>
-#include <omp.h>
 #include "TStopwatch.h"
 #include "include/functions.h"
 
-#define numEventsD 1e2
+#define numEventsD 1e6
 #define numThreads 8
 UInt_t numEvents = static_cast<UInt_t>(numEventsD);
 
@@ -37,6 +37,7 @@ void fillTree_ompMerge() {
         trees[i]->Branch("variable", &variables[i], "variable/F");
     }
     // Fill in parallel
+    // Every thread has its own tree object which is being filled
     #pragma omp parallel
     {
         UInt_t tid = omp_get_thread_num();
@@ -56,7 +57,7 @@ void fillTree_ompMerge() {
     tree->SetBranchAddress("variable", &variable);
     stopwatch.Stop();
     elapsedFill = stopwatch.RealTime() * 1000; // Convert to milliseconds
-    std::cout << "Fill data (omp + merge): " << elapsedFill << " milliseconds" << std::endl;
+    std::cout << "Fill data (OMP + merge): " << elapsedFill << " milliseconds" << std::endl;
     
     // Sort to compare for equality
     std::vector<std::pair<UInt_t, Float_t>> eventOrdering; // Create a vector of pairs containing the event number and corresponding ordering value
@@ -73,7 +74,7 @@ void fillTree_ompMerge() {
         variable = pair.second;
         sortedTree->Fill();
     }
-    //delete tree; // Keep only sorted tree
+    delete tree; // Keep only sorted tree
 
     // Write, close, delete
     file->Write();

@@ -15,7 +15,7 @@ const UInt_t numEvents = static_cast<UInt_t>(numEventsD);
 void sequential1() {
     std::cout<<"\nExercise 1..."<<std::endl;
     TStopwatch stopwatch;
-    TFile *file = new TFile("sequential1.root", "RECREATE", "sequential1", 0 ); // 0 is for the compression algorithm to ensure the same compression each time
+    TFile *file = new TFile("sequential1.root", "RECREATE", "sequential1", 0 ); 
 
     // 1) Fill tree sequentially
     stopwatch.Start();
@@ -42,7 +42,7 @@ void sequential1() {
     TH1F* eventHist = new TH1F("event_dist", "Event Distribution;Event;Count", 100, 0, numEvents);
     TH1F* variableHist = new TH1F("variable_dist", "Variable Distribution;Variable;Count", 100, 0, numEvents*10);
     TTreeReader reader(tree);
-    TTreeReaderValue<UInt_t> eventRV(reader, "event");  // <UInt_t> won't work?
+    TTreeReaderValue<UInt_t> eventRV(reader, "event"); 
     TTreeReaderValue<Float_t> variableRV(reader, "variable");
     while (reader.Next()) {
         UInt_t event = *eventRV;

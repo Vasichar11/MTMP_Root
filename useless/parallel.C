@@ -42,7 +42,7 @@ void fillTreeLocks(const UInt_t start, const UInt_t end, TTree* tree,  UInt_t &l
 void parallel1() {
     TStopwatch stopwatch;
     std::cout<<"Exercise 1..."<<std::endl;
-    TFile *file = new TFile("parallel1.root", "RECREATE", "parallel1", 0 ); // 0 is for the compression algorithm to ensure the same compression each time
+    TFile *file = new TFile("parallel1.root", "RECREATE", "parallel1", 0 ); 
     ROOT::EnableThreadSafety();
     // 1) Fill tree in parallel
 

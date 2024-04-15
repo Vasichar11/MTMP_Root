@@ -1,6 +1,9 @@
 /// Fill in the same tree in parallel just by enabling IMT
-/// Many threads spawned but one has increased load
-/// Correct results - IMT exploited?
+/// just by calling ROOT::EnableImplicitMT(numThreads);
+/// All threads spawned but one has increased load
+/// numThreads is automatically decided by ROOT. Any other value is used just as a hint.
+/// Works
+
 
 
 #include <iostream>
@@ -10,13 +13,13 @@
 #include "TStopwatch.h"
 #include "include/functions.h"
 
-#define numEventsD 1e2
+#define numEventsD 1e6
 #define numThreads 8
 const UInt_t numEvents = static_cast<UInt_t>(numEventsD); 
 
 void fillTrees_imt() {
     TStopwatch stopwatch;
-    TFile *file = new TFile("fillTrees_imt.root", "RECREATE", "fillTrees_imt", 0 ); // 0 is for the compression algorithm to ensure the same compression each time
+    TFile *file = new TFile("fillTrees_imt.root", "RECREATE", "fillTrees_imt", 0 ); 
     ROOT::EnableImplicitMT(numThreads);
 
     stopwatch.Start();

@@ -11,12 +11,13 @@
 #include "include/functions.h"
 
 #define numEventsD 1e4
-#define numFiles 2
+#define numThreads 2
 const UInt_t numEvents = static_cast<UInt_t>(numEventsD); 
 
 
-void fillHist_seq() {
+void fillHist_imt() {
     TStopwatch stopwatch;
+    ROOT::EnableImplicitMT(numThreads);
 
     auto workItem = [](const char* fileNamePrefix, const char* histName) {
         TRandom3 rndm;
@@ -30,14 +31,14 @@ void fillHist_seq() {
     };
 
     stopwatch.Start();
-    for (UInt_t i = 0; i < numFiles; ++i) { 
-        workItem(Form("fillHist_seq%u", i), Form("hist%u", i));
+    for (UInt_t i = 0; i < numThreads; ++i) { 
+        workItem(Form("fillHist_imt%u", i), Form("hist%u", i));
     }
     stopwatch.Stop();
     std::cout << "Fill histo data (sequential): " << stopwatch.RealTime() * 1000 << " milliseconds" << std::endl;
 }
 
 int main() {
-    fillHist_seq(); 
+    fillHist_imt(); 
     return 0;
 }

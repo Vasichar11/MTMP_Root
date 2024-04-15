@@ -1,5 +1,6 @@
 /// Fill in the same tree using locks, the conventional way
 /// Incorrect results  - Race condition - Fills duplicate entries like in fillTree_ompCritical.C
+/// Issue: Concurrent access in conditional thread safe object (TTree). This is not allowed even if we use locks
 
 #include <iostream>
 #include <vector>
@@ -14,9 +15,9 @@
 #define numEventsD 1e2
 #define numThreads 8
 const UInt_t numEvents = static_cast<UInt_t>(numEventsD); 
-TMutex Mutex; 
+TMutex Mutex;
 
-void filltreeocks(const UInt_t start, const UInt_t end, TTree* tree,  UInt_t &local_event, Float_t &local_variable) {
+void filltreelocks(const UInt_t start, const UInt_t end, TTree* tree,  UInt_t &local_event, Float_t &local_variable) {
     std::thread::id this_id = std::this_thread::get_id();
 
     for (UInt_t i = start; i < end; ++i) {
@@ -33,7 +34,7 @@ void filltreeocks(const UInt_t start, const UInt_t end, TTree* tree,  UInt_t &lo
 
 void fillTree_locks() {
     TStopwatch stopwatch;
-    TFile *file = new TFile("fillTree_locks.root", "RECREATE", "fillTree_locks", 0 ); // 0 is for the compression algorithm to ensure the same compression each time
+    TFile *file = new TFile("fillTree_locks.root", "RECREATE", "fillTree_locks", 0 ); 
 
     // ROOT::EnableThreadSafety(); no need
     // Since TTree is Conditionally thread safe
@@ -51,7 +52,7 @@ void fillTree_locks() {
         if (i == numThreads - 1) { 
             end = numEvents; // Last thread handles remainder events
         }
-        threads.emplace_back(filltreeocks, start, end, tree, std::ref(event), std::ref(variable));
+        threads.emplace_back(filltreelocks, start, end, tree, std::ref(event), std::ref(variable));
     }
     for (auto& thread : threads) {
         thread.join();

@@ -12,7 +12,7 @@
 #include "ROOT/TSeq.hxx"
 #include "include/functions.h"
 
-#define numEventsD 1e2
+#define numEventsD 1e6
 #define numThreads 8
 const UInt_t numEvents = static_cast<UInt_t>(numEventsD); 
 
@@ -25,6 +25,7 @@ void fillHist_threads() {
         TH1F h(Form("hist%u", workerID), "The Histogram", 64, -4, 4);
         for (UInt_t i = 0; i < numEvents; ++i) {
             h.Fill(workerRndm.Gaus());
+            simulateLoad();
         }
         h.Write();
         return 0;

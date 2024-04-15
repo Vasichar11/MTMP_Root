@@ -8,13 +8,13 @@
 #include "TStopwatch.h"
 #include "include/functions.h"
 
-#define numEventsD 1e2
+#define numEventsD 1e6
 
 const UInt_t numEvents = static_cast<UInt_t>(numEventsD); 
 
 void fillTree_seq() {
     TStopwatch stopwatch;
-    TFile *file = new TFile("fillTree_seq.root", "RECREATE", "fillTree_seq", 0 ); // 0 is for the compression algorithm to ensure the same compression each time
+    TFile *file = new TFile("fillTree_seq.root", "RECREATE", "fillTree_seq", 0 ); 
     stopwatch.Start();
     auto tree = fillTree(0, numEvents);
     stopwatch.Stop();
