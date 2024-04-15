@@ -21,6 +21,8 @@ for name, group in groups:
     plt.suptitle(subtitle)
     for process, data in group.groupby("Processes"):
         plt.plot(data["Data"], data["ROUND(Speedup)"], label=f"Processes: {process}", color=process_colors.get(process, 'green'))
+    plt.xscale('log') 
+    plt.xticks([1e4, 1e5, 1e6])
     plt.xlabel("Data")
     plt.ylabel("Speedup")
     plt.legend(title="Processes")

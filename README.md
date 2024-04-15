@@ -1,3 +1,8 @@
+## Install packages 
+- to run MPI: sudo apt-get install openmpi-bin
+- to run OpenMP: it is most probably installed in newer g++ versions
+- to use implicit multithreading IMT: ROOT should be built with flag imt=on which is the default
+
 ## Compilation
 - g++ -o program program.C functions.cpp `root-config --cflags --libs`
 - if omp: g++ -o program program.C functions.cpp `root-config --cflags --libs` -fopenmp

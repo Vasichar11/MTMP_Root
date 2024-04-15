@@ -1,5 +1,4 @@
 /// Fill multiple histograms in multiple files sequentially
-/// Reference results
 
 #include <iostream>
 #include "TFile.h"

@@ -19,17 +19,17 @@ void getTree_seq() {
     auto tree = fillTree(0, numEvents);
     UInt_t event;
     Float_t variable;
+    Float_t result;
     // Set address to access later
     tree->SetBranchAddress("event", &event);
     tree->SetBranchAddress("variable", &variable);
 
-    stopwatch.Start();
     const auto nEntries = tree->GetEntries();
     stopwatch.Start();
     for (auto i : ROOT::TSeqUL(nEntries)) {
         tree->GetEntry(i);
-        // Access to event and variable 
-        //std::cout << "event " << event << " variable " << variable << std::endl;
+        result = variable/event;
+        if (result!=1) break;
     }
     stopwatch.Stop();
     std::cout << "Read tree data: " << stopwatch.RealTime() * 1000 << " milliseconds" << std::endl;

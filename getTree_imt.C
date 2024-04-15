@@ -22,20 +22,20 @@ void getTree_imt() {
     auto tree = fillTree(0, numEvents);
     UInt_t event;
     Float_t variable;
+    Float_t result;
     // Set address to access later
     tree->SetBranchAddress("event", &event);
     tree->SetBranchAddress("variable", &variable);
-
     ROOT::EnableImplicitMT(numThreads);
     const auto nEntries = tree->GetEntries();
     stopwatch.Start();
     for (auto i : ROOT::TSeqUL(nEntries)) {
         tree->GetEntry(i);
-        // Access to event and variable 
-        //std::cout << "event " << event << " variable " << variable << std::endl;
+        result = variable/event;
+        if (result!=1) break;
     }
     stopwatch.Stop();
-    std::cout << " Read tree data (IMT): " << stopwatch.RealTime() * 1000 << " milliseconds" << std::endl;
+    std::cout << "Read tree data (IMT): " << stopwatch.RealTime() * 1000 << " milliseconds" << std::endl;
     ROOT::DisableImplicitMT();
 
     file->Close();
